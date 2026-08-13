@@ -1,9 +1,11 @@
 using System;
 using System.Text;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using TaskManagement.API.Controllers;
 using TaskManagement.Application.Settings;
 using TaskManagement.Identity;
 using TaskManagement.Identity.Services;
@@ -48,6 +50,11 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(TaskManagement.API.Controllers.TasksController).Assembly)
+    .AddControllersAsServices();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(TaskManagement.Application.Services.TaskService).Assembly));
+
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -64,9 +71,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapControllers();
 
 var summaries = new[]
 {
@@ -89,6 +97,8 @@ app.MapGet("/weatherforecast", () =>
 .RequireAuthorization();
 
 app.Run();
+
+public partial class Program { }
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
