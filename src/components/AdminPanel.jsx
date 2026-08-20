@@ -117,6 +117,11 @@ const AdminPanel = () => {
               setIsModalOpen(false);
             }
           }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              setIsModalOpen(false);
+            }
+          }}
         >
           <div className="modal">
             <div className="modal-header"><h3>Invite account</h3><button type="button" className="close-btn" onClick={() => setIsModalOpen(false)} aria-label="Close modal">×</button></div>
