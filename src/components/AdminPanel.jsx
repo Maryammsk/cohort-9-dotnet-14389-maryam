@@ -78,7 +78,6 @@ const AdminPanel = () => {
           + Invite account
         </button>
       </div>
-
       {error && <div className="admin-error" role="alert">{error}</div>}
       {isLoading ? (
         <p>Loading users...</p>
@@ -110,8 +109,16 @@ const AdminPanel = () => {
       )}
 
       {isModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
+        <dialog
+          open
+          className="modal-backdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsModalOpen(false);
+            }
+          }}
+        >
+          <div className="modal">
             <div className="modal-header"><h3>Invite account</h3><button type="button" className="close-btn" onClick={() => setIsModalOpen(false)} aria-label="Close modal">×</button></div>
             <form onSubmit={createUser}>
               <div className="form-grid">
@@ -126,7 +133,7 @@ const AdminPanel = () => {
               <div className="modal-actions"><button type="button" className="secondary-btn" onClick={() => setIsModalOpen(false)}>Cancel</button><button type="submit" className="primary-btn" disabled={isSaving}>{isSaving ? 'Creating...' : 'Create account'}</button></div>
             </form>
           </div>
-        </div>
+        </dialog>
       )}
     </section>
   );
