@@ -14,11 +14,32 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
+
+    - name: Install SonarScanner for .NET
+      shell: bash
+      run: |
+        dotnet tool install --global dotnet-sonarscanner
+        echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+    - name: Begin SonarCloud analysis
+      shell: bash
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+        SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      run: >-
+        dotnet sonarscanner begin
+        /k:"$SONAR_PROJECT_KEY"
+        /o:"$SONAR_ORGANIZATION"
+        /d:sonar.token="$SONAR_TOKEN"
+        /d:sonar.host.url="https://sonarcloud.io"
 
     - name: Restore dependencies
       run: dotnet restore TaskManagementTool.slnx
@@ -28,3 +49,9 @@ jobs:
 
     - name: Run unit & integration tests
       run: dotnet test TaskManagementTool.slnx --configuration Release --no-build --verbosity normal
+
+    - name: End SonarCloud analysis
+      shell: bash
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
