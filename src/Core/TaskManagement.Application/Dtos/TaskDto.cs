@@ -12,5 +12,7 @@ public class TaskDto
     public TaskStatus Status { get; set; }
     public TaskPriority Priority { get; set; }
     public DateTime? DueDate { get; set; }
+    public Guid AssignedUserId { get; set; }
+    public Guid CreatedByUserId { get; set; }
     public DateTime CreatedAt { get; set; }
 }

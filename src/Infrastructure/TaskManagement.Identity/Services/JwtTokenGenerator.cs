@@ -30,7 +30,8 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("isActive", user.IsActive.ToString().ToLowerInvariant())
         };
 
         if (!string.IsNullOrEmpty(user.UserName))

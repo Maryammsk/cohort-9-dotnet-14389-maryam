@@ -33,6 +33,12 @@ const isTokenExpired = (token) => {
   return Date.now() >= decoded.exp * 1000;
 };
 
+const getRoles = (claims) => {
+  const roleClaim = claims?.role
+    || claims?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+  return Array.isArray(roleClaim) ? roleClaim : roleClaim ? [roleClaim] : [];
+};
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || null);
   const [user, setUser] = useState(null);
@@ -110,6 +116,8 @@ export function AuthProvider({ children }) {
       user,
       isAuthenticated,
       isLoading,
+      roles: getRoles(user),
+      isAdmin: getRoles(user).includes('Admin'),
       login,
       logout,
     }),

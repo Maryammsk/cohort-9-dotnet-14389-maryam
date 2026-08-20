@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { useAuth } from '../react-auth/context/AuthContext';
+import AdminPanel from './AdminPanel';
 
 const TASK_STATUS = {
   Pending: 0,
@@ -107,6 +109,7 @@ const getPriorityLabel = (priorityValue) => {
 };
 
 const TaskDashboard = () => {
+  const { isAdmin } = useAuth();
   const [tasks, setTasks] = useState(initialTasks);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -114,6 +117,7 @@ const TaskDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [formData, setFormData] = useState(defaultFormState);
+  const [activeTab, setActiveTab] = useState('tasks');
 
   const filteredTasks = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -264,6 +268,24 @@ const TaskDashboard = () => {
           .form-field input, .form-field textarea, .form-field select { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
           .form-field textarea { min-height: 90px; resize: vertical; }
           .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+          .dashboard-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+          .dashboard-tab { border: 1px solid #d1d5db; background: white; color: #374151; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+          .dashboard-tab.active { background: #1f2937; color: white; border-color: #1f2937; }
+          .admin-panel { background: white; border-radius: 14px; padding: 24px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); }
+          .admin-panel-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+          .admin-panel-header h2 { margin: 0; color: #111827; }
+          .admin-eyebrow { margin: 0 0 6px; color: #2563eb; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+          .admin-table-wrap { overflow-x: auto; }
+          .admin-table { width: 100%; border-collapse: collapse; text-align: left; }
+          .admin-table th, .admin-table td { border-bottom: 1px solid #e5e7eb; padding: 14px 10px; vertical-align: middle; }
+          .admin-table th { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+          .admin-table td strong, .admin-table td small { display: block; }
+          .admin-table td small { color: #6b7280; margin-top: 4px; }
+          .admin-table select { padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
+          .access-badge { display: inline-flex; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+          .access-active { background: #dcfce7; color: #166534; }
+          .access-inactive { background: #fee2e2; color: #991b1b; }
+          .admin-error { background: #fee2e2; color: #991b1b; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; }
           @media (max-width: 640px) { .summary-grid, .form-grid { grid-template-columns: 1fr; } .task-header { flex-direction: column; align-items: flex-start; gap: 12px; } }
         `}
       </style>
@@ -275,6 +297,16 @@ const TaskDashboard = () => {
             + New Task
           </button>
         </div>
+
+        {isAdmin && (
+          <div className="dashboard-tabs" role="tablist" aria-label="Dashboard views">
+            <button className={`dashboard-tab ${activeTab === 'tasks' ? 'active' : ''}`} type="button" role="tab" aria-selected={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')}>Tasks</button>
+            <button className={`dashboard-tab ${activeTab === 'admin' ? 'active' : ''}`} type="button" role="tab" aria-selected={activeTab === 'admin'} onClick={() => setActiveTab('admin')}>Admin Panel / Client Management</button>
+          </div>
+        )}
+
+        {isAdmin && activeTab === 'admin' ? <AdminPanel /> : (
+        <>
 
         <div className="summary-grid">
           <div className="summary-card">
@@ -368,6 +400,8 @@ const TaskDashboard = () => {
             </article>
           ))}
         </div>
+        </>
+        )}
       </div>
 
       {isModalOpen && (

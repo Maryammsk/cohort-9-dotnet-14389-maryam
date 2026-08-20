@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -48,6 +49,39 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings?.Issuer,
         ValidAudience = jwtSettings?.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = async context =>
+        {
+            var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+            var userId = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? context.Principal?.FindFirst("sub")?.Value;
+            var user = userId is null ? null : await userManager.FindByIdAsync(userId);
+
+            if (user is null || !user.IsActive)
+            {
+                context.Fail("The user account is inactive.");
+                return;
+            }
+
+            var identity = context.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
+            if (identity is null)
+            {
+                context.Fail("The user identity is invalid.");
+                return;
+            }
+
+            foreach (var roleClaim in identity.FindAll(System.Security.Claims.ClaimTypes.Role).ToList())
+            {
+                identity.RemoveClaim(roleClaim);
+            }
+
+            foreach (var role in await userManager.GetRolesAsync(user))
+            {
+                identity.AddClaim(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, role));
+            }
+        }
     };
 });
 

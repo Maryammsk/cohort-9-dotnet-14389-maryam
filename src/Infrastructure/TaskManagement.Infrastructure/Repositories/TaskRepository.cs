@@ -90,6 +90,8 @@ public class TaskRepository : ITaskRepository
         Priority = task.Priority,
         Status = task.Status,
         DueDate = task.DueDate,
+        AssignedUserId = task.AssignedUserId,
+        CreatedByUserId = task.CreatedByUserId,
         CreatedAt = task.CreatedAt
     };
 }

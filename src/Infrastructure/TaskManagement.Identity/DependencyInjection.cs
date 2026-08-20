@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TaskManagement.Application.Interfaces;
+using TaskManagement.Identity.Services;
 
 namespace TaskManagement.Identity;
 
@@ -17,6 +19,9 @@ public static class DependencyInjection
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<IdentityDbContext>()
             .AddDefaultTokenProviders();
+
+        services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<IUserManagementService, IdentityUserManagementService>();
 
         return services;
     }

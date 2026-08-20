@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using TaskManagement.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TaskManagement.Application.Dtos;
 using TaskManagement.Application.Features.Tasks.Commands;
@@ -10,6 +13,7 @@ using TaskManagement.Application.Features.Tasks.Queries;
 namespace TaskManagement.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
@@ -24,14 +28,14 @@ public class TasksController : ControllerBase
     public async Task<ActionResult<IEnumerable<TaskDto>>> GetAll()
     {
         var tasks = await _mediator.Send(new GetAllTasksQuery());
-        return Ok(tasks);
+        return Ok(FilterForCurrentUser(tasks));
     }
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<TaskDto>> GetById(Guid id)
     {
         var task = await _mediator.Send(new GetTaskByIdQuery(id));
-        return task is null ? NotFound() : Ok(task);
+        return task is null || !CanAccess(task) ? NotFound() : Ok(task);
     }
 
     [HttpPost]
@@ -59,4 +63,22 @@ public class TasksController : ControllerBase
         await _mediator.Send(new DeleteTaskCommand(id));
         return NoContent();
     }
+
+    private IEnumerable<TaskDto> FilterForCurrentUser(IEnumerable<TaskDto> tasks)
+    {
+        if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Manager))
+        {
+            return tasks;
+        }
+
+        return Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"), out var userId)
+            ? tasks.Where(task => task.AssignedUserId == userId)
+            : [];
+    }
+
+    private bool CanAccess(TaskDto task)
+        => User.IsInRole(Roles.Admin)
+           || User.IsInRole(Roles.Manager)
+           || (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"), out var userId)
+               && task.AssignedUserId == userId);
 }
