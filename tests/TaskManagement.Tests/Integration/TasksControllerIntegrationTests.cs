@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -8,7 +9,6 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -88,13 +88,14 @@ public class TasksControllerIntegrationTests : IClassFixture<TasksControllerInte
         {
             builder.ConfigureServices(services =>
             {
-                services.AddAuthentication(options =>
+                // Remove existing ITaskRepository registration if present
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ITaskRepository));
+                if (descriptor != null)
                 {
-                    options.DefaultAuthenticateScheme = TestAuthHandler.AuthenticationScheme;
-                    options.DefaultChallengeScheme = TestAuthHandler.AuthenticationScheme;
-                })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.AuthenticationScheme, _ => { });
+                    services.Remove(descriptor);
+                }
 
+                // Register Mock TaskRepository
                 var taskRepositoryMock = new Mock<ITaskRepository>(MockBehavior.Strict);
                 taskRepositoryMock
                     .Setup(x => x.GetAllAsync())
@@ -131,6 +132,14 @@ public class TasksControllerIntegrationTests : IClassFixture<TasksControllerInte
                     .Returns(Task.CompletedTask);
 
                 services.AddSingleton(taskRepositoryMock.Object);
+
+                // Configure Authentication Scheme for Testing
+                services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = TestAuthHandler.AuthenticationScheme;
+                    options.DefaultChallengeScheme = TestAuthHandler.AuthenticationScheme;
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.AuthenticationScheme, _ => { });
             });
         }
     }
@@ -139,10 +148,16 @@ public class TasksControllerIntegrationTests : IClassFixture<TasksControllerInte
     {
         public const string AuthenticationScheme = "Test";
 
-        public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, System.Text.Encodings.Web.UrlEncoder encoder, ISystemClock clock)
+#pragma warning disable CS0618 // Type or member is obsolete
+        public TestAuthHandler(
+            IOptionsMonitor<AuthenticationSchemeOptions> options,
+            ILoggerFactory logger,
+            UrlEncoder encoder,
+            ISystemClock clock)
             : base(options, logger, encoder, clock)
         {
         }
+#pragma warning restore CS0618 // Type or member is obsolete
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
