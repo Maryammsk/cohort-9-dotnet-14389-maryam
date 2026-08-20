@@ -24,6 +24,8 @@ public sealed class IdentityService : IIdentityService
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
     {
+        ArgumentNullException.ThrowIfNull(dto);
+        ValidateCredentials(dto.Email, dto.Password);
         await EnsureRolesAsync();
         var user = new ApplicationUser
         {
@@ -37,12 +39,14 @@ public sealed class IdentityService : IIdentityService
 
         var result = await _userManager.CreateAsync(user, dto.Password);
         EnsureSucceeded(result);
-        await _userManager.AddToRoleAsync(user, Roles.Client);
+        EnsureSucceeded(await _userManager.AddToRoleAsync(user, Roles.Client));
         return await CreateResponseAsync(user);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
     {
+        ArgumentNullException.ThrowIfNull(dto);
+        ValidateCredentials(dto.Email, dto.Password);
         await EnsureRolesAsync();
         var user = await _userManager.FindByEmailAsync(dto.Email.Trim());
         if (user is null || !user.IsActive || !await _userManager.CheckPasswordAsync(user, dto.Password))
@@ -88,6 +92,14 @@ public sealed class IdentityService : IIdentityService
             {
                 EnsureSucceeded(await _roleManager.CreateAsync(new IdentityRole(role)));
             }
+        }
+    }
+
+    private static void ValidateCredentials(string? email, string? password)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            throw new ArgumentException("Email and password are required.");
         }
     }
 }

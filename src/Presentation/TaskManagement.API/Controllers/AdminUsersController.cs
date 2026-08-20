@@ -23,7 +23,7 @@ public sealed class AdminUsersController : ControllerBase
         => Ok(await _userManagementService.GetUsersAsync());
 
     [HttpPost]
-    public async Task<ActionResult<UserDto>> CreateUser(CreateUserDto dto)
+    public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto dto)
     {
         try
         {
@@ -41,7 +41,7 @@ public sealed class AdminUsersController : ControllerBase
     }
 
     [HttpPut("{userId}/role")]
-    public async Task<ActionResult<UserDto>> UpdateRole(string userId, UpdateUserRoleDto dto)
+    public async Task<ActionResult<UserDto>> UpdateRole(string userId, [FromBody] UpdateUserRoleDto dto)
     {
         try
         {
@@ -62,7 +62,7 @@ public sealed class AdminUsersController : ControllerBase
     }
 
     [HttpPatch("{userId}/access")]
-    public async Task<ActionResult<UserDto>> UpdateAccess(string userId, UpdateUserAccessDto dto)
+    public async Task<ActionResult<UserDto>> UpdateAccess(string userId, [FromBody] UpdateUserAccessDto dto)
     {
         try
         {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TaskManagement.Application.Dtos;
 using TaskManagement.Application.Interfaces;
 
@@ -19,7 +20,7 @@ public sealed class IdentityUserManagementService : IUserManagementService
 
     public async Task<IReadOnlyCollection<UserDto>> GetUsersAsync()
     {
-        var users = _userManager.Users.OrderBy(user => user.Email).ToList();
+        var users = await _userManager.Users.OrderBy(user => user.Email).ToListAsync();
         var result = new List<UserDto>(users.Count);
 
         foreach (var user in users)
@@ -32,6 +33,12 @@ public sealed class IdentityUserManagementService : IUserManagementService
 
     public async Task<UserDto> CreateUserAsync(CreateUserDto dto)
     {
+        ArgumentNullException.ThrowIfNull(dto);
+        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
+        {
+            throw new ArgumentException("Email and password are required.");
+        }
+
         var role = NormalizeRole(dto.Role);
         await EnsureRolesAsync();
 

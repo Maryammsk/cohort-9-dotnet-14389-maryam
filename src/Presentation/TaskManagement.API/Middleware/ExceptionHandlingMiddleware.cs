@@ -34,9 +34,11 @@ public class ExceptionHandlingMiddleware
     {
         var statusCode = exception switch
         {
+            ArgumentException => HttpStatusCode.BadRequest,
             BadRequestException => HttpStatusCode.BadRequest,
             ValidationException => HttpStatusCode.UnprocessableEntity,
             NotFoundException => HttpStatusCode.NotFound,
+            UnauthorizedAccessException => HttpStatusCode.Unauthorized,
             _ => HttpStatusCode.InternalServerError
         };
 
@@ -44,9 +46,11 @@ public class ExceptionHandlingMiddleware
         {
             Title = exception switch
             {
+                ArgumentException => "Bad Request",
                 BadRequestException => "Bad Request",
                 ValidationException => "Validation Failed",
                 NotFoundException => "Resource Not Found",
+                UnauthorizedAccessException => "Unauthorized",
                 _ => "An error occurred"
             },
             Status = (int)statusCode,

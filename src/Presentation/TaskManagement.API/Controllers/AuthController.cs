@@ -16,10 +16,10 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto dto)
+    public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterDto dto)
         => Ok(await _identityService.RegisterAsync(dto));
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
+    public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
         => Ok(await _identityService.LoginAsync(dto));
 }
